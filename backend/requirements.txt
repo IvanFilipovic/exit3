@@ -1,0 +1,45 @@
+# Core Django
+Django==5.2.3
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+
+# Database
+psycopg2-binary==2.9.9
+
+# Configuration
+python-decouple==3.8
+python-dotenv==1.0.0
+
+# Admin UI Enhancement
+django-daisy==0.1.0
+
+# Security & Rate Limiting
+django-ratelimit==4.1.0
+django-csp==3.8
+
+# WSGI Server
+gunicorn==21.2.0
+
+# Static File Serving
+whitenoise==6.6.0
+
+# API Documentation
+drf-spectacular==0.27.1
+
+# Monitoring & Error Tracking
+sentry-sdk==1.40.0
+
+# Authentication (Optional - uncomment if using JWT)
+# djangorestframework-simplejwt==5.3.1
+
+# Development dependencies (install with: pip install -r requirements-dev.txt)
+# pytest==7.4.4
+# pytest-django==4.7.0
+# pytest-cov==1.4.0
+# factory-boy==3.3.0
+# black==23.12.1
+# flake8==7.0.0
+# mypy==1.8.0
+# django-stubs==4.2.7
+# djangorestframework-stubs==3.14.5
+# django-debug-toolbar==4.2.0
