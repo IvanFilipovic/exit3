@@ -1,0 +1,36 @@
+# Development dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Include production requirements
+-r requirements.txt
+
+# Testing
+pytest==7.4.4
+pytest-django==4.7.0
+pytest-cov==1.4.0
+factory-boy==3.3.0
+faker==22.6.0
+
+# Code Formatting & Linting
+black==23.12.1
+flake8==7.0.0
+isort==5.13.2
+
+# Type Checking
+mypy==1.8.0
+django-stubs==4.2.7
+djangorestframework-stubs==3.14.5
+types-requests==2.31.0.20240125
+
+# Debugging
+django-debug-toolbar==4.2.0
+ipython==8.20.0
+ipdb==0.13.13
+
+# Security Scanning
+bandit==1.7.6
+safety==3.0.1
+
+# Documentation
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
