@@ -41,16 +41,38 @@ ALLOWED_HOSTS = config(
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
-CORS_ALLOWED_ORIGINS = [
-    'https://exit3.agency',
-    'http://exit3.agency',
-    'https://www.exit3.agency',
-    'http://www.exit3.agency',
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='https://exit3.agency,https://www.exit3.agency',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://exit3.agency,https://www.exit3.agency',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
+# CORS settings
+CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'origin',
+    'user-agent',
+    'x-requested-with',
 ]
-CSRF_TRUSTED_ORIGINS = [
-    "https://exit3.agency",
-    "https://www.exit3.agency",
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
 ]
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
 # Application definition
 
@@ -107,7 +129,12 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'lead_create': '10/hour',
-    }
+    },
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'DEFAULT_VERSION': 'v1',
+    'ALLOWED_VERSIONS': ['v1'],
 }
 
 
