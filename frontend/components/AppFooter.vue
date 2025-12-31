@@ -94,11 +94,6 @@
                             mail@mail.com
                         </span>
                     </p>
-                    <p class="group relative w-max flex flex-row items-center lg:px-4 py-2 hover:text-primary">
-                        <span class="px-auto py-auto font-light transition-transform duration-300">
-                            01/2312313
-                        </span>
-                    </p>
                 </div>
             </div>
 

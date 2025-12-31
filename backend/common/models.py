@@ -114,20 +114,3 @@ class Newsletter(models.Model):
 
     def __str__(self):
         return f"{self.email} - {'Subscribed' if self.is_subscribed else 'Unsubscribed'}"
-"""
-def get_expiry_time():
-    return timezone.now() + timedelta(hours=6)
-
-class ConnectionToken(models.Model):
-    client = models.ForeignKey('Client', on_delete=models.CASCADE)
-    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    used = models.BooleanField(default=False)
-    expires_at = models.DateTimeField(default=get_expiry_time)
-
-    def is_expired(self):
-        return timezone.now() > self.expires_at or self.used
-
-    def __str__(self):
-        return f"{self.client.client_name} — {self.token}"
-"""
