@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@property --num-hours {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+@property --num-profit {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+@property --num-leads {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+@keyframes counter {
+  from {
+    --num-hours: 0;
+    --num-profit: 0;
+    --num-leads: 0;
+  }
+  to {
+    --num-hours: 40;
+    --num-profit: 3;
+    --num-leads: 99;
+  }
+}
+
+.button-primary {
+  @apply bg-project_black text-pure_white py-3 px-6 my-auto rounded-[6.25rem] hover:bg-primary;
+}
+.button-secondary {
+  @apply bg-project_gray text-project_black py-3 px-6 md:mx-auto my-auto rounded-[6.25rem] hover:bg-pure_white;
+}
+.active-link {
+  @apply bg-pure_white text-project_black rounded-[6.25rem];
+}
+.active-secondary {
+  @apply opacity-100 bg-pure_white text-project_black rounded-[6.25rem];
+}
+
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+.content {
+  @apply max-w-7xl mx-auto py-4 px-4;
+}
+.container {
+  @apply w-full mx-auto;
+}

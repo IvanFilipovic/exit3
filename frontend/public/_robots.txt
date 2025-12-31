@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /backend
+Sitemap: https://www.exit3.online/sitemap.xml
