@@ -1,8 +1,13 @@
 # views.py
 from rest_framework import generics, filters
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from .models import Lead, Newsletter
 from .serializers import LeadSerializer, NewsletterSerializer
+
+
+class LeadCreateThrottle(AnonRateThrottle):
+    rate = '10/hour'
 
 class LeadListCreateAPIView(generics.ListCreateAPIView):
     """
@@ -11,6 +16,7 @@ class LeadListCreateAPIView(generics.ListCreateAPIView):
     """
     serializer_class = LeadSerializer
     queryset = Lead.objects.all()
+    throttle_classes = [LeadCreateThrottle]
 
     def get_queryset(self):
         qs = super().get_queryset()

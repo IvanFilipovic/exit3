@@ -21,6 +21,24 @@ Exit Three is a modern, well-structured B2B SaaS marketing website with strong S
 
 ---
 
+## 📢 Backend Update (2025-12-31)
+
+**Important:** The backend has implemented several security fixes that affect frontend integration:
+
+✅ **Backend Fixes Completed:**
+1. **Rate Limiting** - Backend now has DRF throttling (100/hour general, 10/hour for lead creation)
+2. **Authentication Improved** - Timing-attack prevention implemented
+3. **Security Headers** - Backend configured with security headers
+4. **Database** - PostgreSQL configured (ready for production)
+5. **Environment Config** - SECRET_KEY, ALLOWED_HOSTS now use environment variables
+
+⚠️ **Frontend Action Required:**
+- The backend rate limiting helps, but frontend still needs client-side rate limiting
+- **CRITICAL:** API key is still exposed in frontend public config (see Issue #1 below)
+- Frontend should implement server-side API proxy to hide API key
+
+---
+
 ## 🔴 Critical Security Issues
 
 ### 1. API Key Exposed in Public Runtime Config
@@ -82,11 +100,13 @@ text: `
 
 ### 3. No Rate Limiting on Contact Form
 **File:** `components/Kontakt.vue`, `server/api/send-email.js`
-**Severity:** 🔴 CRITICAL
+**Severity:** 🟡 HIGH (Partially Addressed)
 
-**Issue:** No protection against:
+**Status Update:** Backend now has rate limiting (10 requests/hour for lead creation). However, frontend still needs additional protection.
+
+**Issue:** No frontend protection against:
 - Form spam/bot submissions
-- API abuse (unlimited requests)
+- Client-side API abuse
 - DDoS attacks on email endpoint
 
 **Recommended Fixes:**
@@ -1029,4 +1049,7 @@ Implementing **Phase 1 and Phase 2** from the checklist will make the applicatio
 
 **Review Completed By:** Claude (AI Assistant)
 **Date:** December 30, 2025
+**Last Updated:** December 31, 2025 (Backend coordination notes added)
 **Next Review:** After implementing Phase 1 & 2 fixes
+
+**Note:** This review has been updated to reflect backend security improvements completed on December 31, 2025. Frontend developers should coordinate with backend team on API key exposure issue.

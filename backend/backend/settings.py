@@ -26,18 +26,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-5+vhun$^e_q1r&q06mzup0ra0e%hv)vvz+lofdxhc5vaz^izc1'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-5+vhun$^e_q1r&q06mzup0ra0e%hv)vvz+lofdxhc5vaz^izc1')
+
+# Raise error if using default in production
+if not DEBUG and SECRET_KEY == 'django-insecure-5+vhun$^e_q1r&q06mzup0ra0e%hv)vvz+lofdxhc5vaz^izc1':
+    raise ValueError("SECRET_KEY must be set in production!")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'exit3.online',
-    'www.exit3.online',
-    "127.0.0.1",
-    "localhost",
-
-]
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1,exit3.online,www.exit3.online',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
 
 CORS_ALLOWED_ORIGINS = [
     'https://exit3.online',
@@ -97,7 +99,14 @@ TEMPLATES = [
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "common.authentication.BasicAPIKeyAuthentication",
-    ]
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'lead_create': '10/hour',
+    }
 }
 
 
@@ -109,22 +118,18 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': config('DB_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': config('DB_NAME', default='exit3_db'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432', cast=int),
+        'CONN_MAX_AGE': 600,  # Connection pooling
+        'OPTIONS': {
+            'connect_timeout': 10,
+        }
     }
 }
-"""
-DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE'),
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
-    }
-}
-"""
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -168,6 +173,20 @@ STATIC_ROOT = '/var/www/exit3/static'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# HTTPS Settings (enabled in production)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
