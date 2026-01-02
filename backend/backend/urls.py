@@ -1,10 +1,11 @@
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from common.views import LeadListCreateAPIView, NewsletterSubscriberListCreateView
 from django.http import JsonResponse
 from django.db import connection
 from django.conf import settings
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 import sys
 import django
 
@@ -38,7 +39,19 @@ urlpatterns = [
     path('backend/api/leads/', LeadListCreateAPIView.as_view(), name='leads-list-create'),
     path('backend/api/newsletter/', NewsletterSubscriberListCreateView.as_view(), name='newsletter-subscribers'),
 
+    # API Documentation (OpenAPI/Swagger)
+    path('backend/api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('backend/api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('backend/api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+
     # Health & Debug endpoints
     path('backend/health/', health_check, name='health-check'),
     path('backend/debug/', debug_view, name='debug-view')
 ]
+
+# Django Debug Toolbar (development only)
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns
