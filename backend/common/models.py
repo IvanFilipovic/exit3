@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
@@ -12,15 +13,15 @@ CATEGORY_CHOICES = [
         ('social_media_auto', 'Social Media Automation'),
         ('ecommerce_auto', 'E-commerce Automation'),
         ('sales_auto', 'Sales Automation'),
-    ] 
+    ]
 class Lead(models.Model):
     # Basic info
-    full_name = models.CharField(max_length=255)
-    position = models.CharField(max_length=255)
-    company_name = models.CharField(max_length=255, blank=True, null=True)
+    full_name: str = models.CharField(max_length=255)
+    position: str = models.CharField(max_length=255)
+    company_name: Optional[str] = models.CharField(max_length=255, blank=True, null=True)
 
     # Contact info
-    phone_number = models.CharField(
+    phone_number: Optional[str] = models.CharField(
         max_length=20,
         blank=True,
         null=True,
@@ -31,10 +32,10 @@ class Lead(models.Model):
             )
         ]
     )
-    email = models.EmailField(blank=True, null=True)
+    email: Optional[str] = models.EmailField(blank=True, null=True)
 
     # Source and status
-    source = models.CharField(
+    source: str = models.CharField(
         max_length=100,
         choices=[
             ('website', 'Website'),
@@ -47,7 +48,7 @@ class Lead(models.Model):
         default='other'
     )
 
-    status = models.CharField(
+    status: str = models.CharField(
         max_length=50,
         choices=[
             ('new', 'New'),
@@ -61,28 +62,28 @@ class Lead(models.Model):
     )
 
     # Additional context
-    notes = models.TextField(blank=True, null=True)
+    notes: Optional[str] = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    category = models.CharField(
+    category: str = models.CharField(
         max_length=50,
         choices=CATEGORY_CHOICES,
         default='web_dev'
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.full_name} ({self.company_name or 'No company'})"
 
 class Client(models.Model):
-    client_info = models.OneToOneField(
+    client_info: Optional[Lead] = models.OneToOneField(
         Lead,
         on_delete=models.CASCADE,
         related_name='client_info',
         blank=True,
         null=True)
-    team_id = models.CharField(max_length=100)
+    team_id: str = models.CharField(max_length=100)
 
-    monthly_charge = models.DecimalField(
+    monthly_charge: Optional[float] = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         blank=True,
@@ -90,7 +91,7 @@ class Client(models.Model):
         validators=[MinValueValidator(0)]
     )
 
-    one_time_charge = models.DecimalField(
+    one_time_charge: Optional[float] = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         blank=True,
@@ -98,19 +99,20 @@ class Client(models.Model):
         validators=[MinValueValidator(0)]
     )
 
-    contract_file = models.FileField(upload_to='contracts/', blank=True, null=True)
-    short_description = models.TextField(blank=True, null=True)
-    category = models.CharField(
+    contract_file: Optional[str] = models.FileField(upload_to='contracts/', blank=True, null=True)
+    short_description: Optional[str] = models.TextField(blank=True, null=True)
+    category: str = models.CharField(
         max_length=50,
         choices=CATEGORY_CHOICES,
         default='web_dev'
     )
-    def __str__(self):
-        return self.client_name
+
+    def __str__(self) -> str:
+        return self.team_id
 
 class Newsletter(models.Model):
-    email = models.EmailField(unique=True)
-    is_subscribed = models.BooleanField(default=True)
+    email: str = models.EmailField(unique=True)
+    is_subscribed: bool = models.BooleanField(default=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.email} - {'Subscribed' if self.is_subscribed else 'Unsubscribed'}"

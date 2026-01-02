@@ -25,15 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = config('DEBUG', default=False, cast=bool)
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-5+vhun$^e_q1r&q06mzup0ra0e%hv)vvz+lofdxhc5vaz^izc1')
 
 # Raise error if using default in production
 if not DEBUG and SECRET_KEY == 'django-insecure-5+vhun$^e_q1r&q06mzup0ra0e%hv)vvz+lofdxhc5vaz^izc1':
     raise ValueError("SECRET_KEY must be set in production!")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'common',
 ]
 
@@ -101,6 +102,16 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Django Debug Toolbar (development only)
+if DEBUG:
+    INSTALLED_APPS += ['debug_toolbar']
+    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
+    INTERNAL_IPS = ['127.0.0.1', 'localhost']
+
+    DEBUG_TOOLBAR_CONFIG = {
+        'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
+    }
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -135,6 +146,23 @@ REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
     'DEFAULT_VERSION': 'v1',
     'ALLOWED_VERSIONS': ['v1'],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# API Documentation Settings (drf-spectacular)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Exit Three API',
+    'DESCRIPTION': 'CRM and Lead Management API for Exit Three',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': r'/backend/api/v[0-9]',
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
+    },
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
 }
 
 
