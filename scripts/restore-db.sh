@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Exit Three - Database Restore Script
+# Exit Three - SQLite Database Restore Script
 
 set -e
 
@@ -11,10 +11,10 @@ cd "$(dirname "$0")/.."
 
 # Check if backup file is provided
 if [ -z "$1" ]; then
-    echo "Usage: $0 <backup_file.sql.gz>"
+    echo "Usage: $0 <backup_file.sqlite3>"
     echo ""
     echo "Available backups:"
-    ls -lh "$BACKUP_DIR"/backup_*.sql.gz 2>/dev/null || echo "  No backups found"
+    ls -lh "$BACKUP_DIR"/backup_*.sqlite3 2>/dev/null || echo "  No backups found"
     exit 1
 fi
 
@@ -40,14 +40,16 @@ if [ "$CONFIRM" != "yes" ]; then
     exit 0
 fi
 
-echo "🔄 Restoring database from backup..."
+echo "🔄 Restoring SQLite database from backup..."
 
-# Drop and recreate database
-docker-compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS exit3_db;"
-docker-compose exec -T db psql -U postgres -c "CREATE DATABASE exit3_db;"
-
-# Restore from backup
-gunzip -c "$BACKUP_FILE" | docker-compose exec -T db psql -U postgres -d exit3_db
+# Restore database
+if [ -f "./backend/db.sqlite3" ]; then
+    # Local development
+    cp "$BACKUP_FILE" "./backend/db.sqlite3"
+else
+    # Docker environment - copy to container
+    docker cp "$BACKUP_FILE" exit3_backend:/app/db.sqlite3
+fi
 
 if [ $? -eq 0 ]; then
     echo "✓ Database restored successfully!"

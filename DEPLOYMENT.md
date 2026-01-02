@@ -124,9 +124,10 @@ SECRET_KEY=<generated_key_above>
 DEBUG=False
 DJANGO_ENV=production
 ALLOWED_HOSTS=exit3.agency,www.exit3.agency
-DB_PASSWORD=<strong_password>
 BASIC_API_KEY=<generate_with_secrets_token_urlsafe_48>
 REDIS_PASSWORD=<strong_password>
+
+# Note: SQLite database will be created automatically, no DB credentials needed
 ```
 
 **Frontend environment:**
@@ -150,10 +151,9 @@ vim .env
 
 **Add:**
 ```bash
-DB_NAME=exit3_db
-DB_USER=postgres
-DB_PASSWORD=<same_as_backend>
 REDIS_PASSWORD=<same_as_backend>
+
+# Note: SQLite database will be stored in a Docker volume, no additional configuration needed
 ```
 
 ### Step 6: Set Up SSL Certificates (Let's Encrypt)
@@ -303,10 +303,13 @@ vim ~/backup-db.sh
 #!/bin/bash
 BACKUP_DIR="/home/deploy/exit3/backend/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
+mkdir -p $BACKUP_DIR
 cd /home/deploy/exit3
-docker-compose exec -T db pg_dump -U postgres exit3_db | gzip > $BACKUP_DIR/backup_$DATE.sql.gz
-find $BACKUP_DIR -name "backup_*.sql.gz" -mtime +7 -delete
-echo "Backup completed: backup_$DATE.sql.gz"
+# Copy SQLite database file from container
+docker cp exit3_backend:/app/db.sqlite3 $BACKUP_DIR/backup_$DATE.sqlite3
+# Delete backups older than 7 days
+find $BACKUP_DIR -name "backup_*.sqlite3" -mtime +7 -delete
+echo "Backup completed: backup_$DATE.sqlite3"
 ```
 
 **Make executable:**
@@ -461,12 +464,14 @@ docker-compose down
 docker-compose up -d
 ```
 
-### Database connection errors
+### Database issues
 
 ```bash
-docker-compose exec db psql -U postgres
-\l  # list databases
-\q  # quit
+# Check if SQLite database exists
+docker-compose exec backend ls -lh /app/db.sqlite3
+
+# Access SQLite database for debugging
+docker-compose exec backend python manage.py dbshell
 ```
 
 ### Permission errors

@@ -1,26 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  db:
-    image: postgres:16-alpine
-    container_name: exit3_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-exit3_db}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/backups:/backups
-    networks:
-      - exit3_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # Redis (for caching and session management)
   redis:
     image: redis:7-alpine
@@ -50,15 +30,12 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - ./backend/logs:/app/logs
+      - db_volume:/app/db
     env_file:
       - ./backend/.env
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
       - REDIS_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -120,13 +97,13 @@ services:
       retries: 3
 
 volumes:
-  postgres_data:
-    driver: local
   redis_data:
     driver: local
   static_volume:
     driver: local
   media_volume:
+    driver: local
+  db_volume:
     driver: local
 
 networks:

@@ -65,7 +65,7 @@ Exit Three is a modern, well-structured B2B SaaS marketing website with strong S
 1. **Rate Limiting** - DRF throttling (100/hour general, 10/hour for lead creation)
 2. **Authentication** - Timing-attack prevention with constant_time_compare
 3. **Security Headers** - XSS filter, content-type nosniff, X-Frame-Options
-4. **Database** - PostgreSQL with connection pooling
+4. **Database** - SQLite for lightweight showcase deployment
 5. **Environment Config** - All sensitive data moved to environment variables
 6. **Logging** - Rotating file handler (10MB, 5 backups) + console
 7. **Error Monitoring** - Sentry integration for production

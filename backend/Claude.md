@@ -2,7 +2,7 @@
 
 **Date:** 2025-12-31
 **Project:** Exit Three CRM/Lead Management Backend
-**Tech Stack:** Django 5.2.3 + Django REST Framework + PostgreSQL/SQLite
+**Tech Stack:** Django 5.2.3 + Django REST Framework + SQLite
 **Review Type:** Comprehensive Production Readiness Assessment
 
 ---
@@ -29,7 +29,7 @@ The following critical and high priority security issues have been resolved:
 1. **✅ Hardcoded SECRET_KEY** - Moved to environment variable with validation
 2. **✅ Weak API Authentication** - Implemented constant_time_compare to prevent timing attacks
 3. **✅ No Rate Limiting** - Added DRF throttling (100/hour general, 10/hour for lead creation)
-4. **✅ Database Configuration** - Configured PostgreSQL with connection pooling
+4. **✅ Database Configuration** - Configured SQLite for lightweight showcase deployment
 5. **✅ Missing Security Headers** - Added XSS filter, content type nosniff, X-Frame-Options
 6. **✅ HTTPS Settings** - Configured for production (SSL redirect, secure cookies, HSTS)
 7. **✅ ALLOWED_HOSTS Configuration** - Moved to environment variable
@@ -243,7 +243,7 @@ class Lead(models.Model):
 - [x] Move `SECRET_KEY` to environment variable
 - [ ] Generate new production `SECRET_KEY` (when deploying)
 - [x] Move `DEBUG` to environment variable **FIXED 2026-01-02**
-- [x] Change database from SQLite to PostgreSQL
+- [x] Configure database (using SQLite for showcase deployment)
 - [x] Implement rate limiting on API endpoints
 - [x] Fix API authentication (timing attack prevention with constant_time_compare)
 - [ ] Remove API key from frontend public config (FRONTEND ISSUE - see frontend section)
@@ -254,7 +254,7 @@ class Lead(models.Model):
 ### Phase 2: Production Infrastructure ✅ COMPLETED (2025-12-31)
 - [x] Create `requirements.txt` with all dependencies
 - [x] Create Dockerfile for backend
-- [x] Create docker-compose.yml with PostgreSQL
+- [x] Create docker-compose.yml with SQLite database
 - [x] Configure Gunicorn as WSGI server
 - [x] Create Nginx reverse proxy configuration
 - [x] Add health check endpoint (/backend/health/)
@@ -330,14 +330,8 @@ class Lead(models.Model):
                    │
                    ▼
            ┌──────────────┐
-           │  PostgreSQL  │
-           │   (Primary)  │
-           └──────┬───────┘
-                  │
-                  ▼
-           ┌──────────────┐
-           │  PostgreSQL  │
-           │   (Replica)  │
+           │    SQLite    │
+           │  (Database)  │
            └──────────────┘
 ```
 
@@ -353,7 +347,6 @@ FROM python:3.11-slim as builder
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
-    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Create virtual environment
@@ -369,7 +362,6 @@ FROM python:3.11-slim
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    postgresql-client \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -419,26 +411,6 @@ CMD ["gunicorn", "backend.wsgi:application", "--config", "gunicorn.conf.py"]
 version: '3.8'
 
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: exit3_postgres
-    environment:
-      POSTGRES_DB: ${DB_NAME:-exit3_db}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backups:/backups
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - backend
-
   redis:
     image: redis:7-alpine
     container_name: exit3_redis
@@ -462,15 +434,12 @@ services:
       - ./:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - db_volume:/app/db
     env_file:
       - .env
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     ports:
@@ -497,7 +466,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  db_volume:
   static_volume:
   media_volume:
 
@@ -525,20 +494,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
     - uses: actions/checkout@v4
 
@@ -561,14 +516,10 @@ jobs:
         mypy .
 
     - name: Run migrations
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
       run: |
         python manage.py migrate
 
     - name: Run tests
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
       run: |
         pytest --cov --cov-report=xml
 
@@ -704,7 +655,7 @@ The backend is now fully production-ready with:
 - ✅ Comprehensive type hints for better code maintainability
 - ✅ Performance monitoring for development (Django Debug Toolbar)
 - ✅ Complete API documentation (Swagger UI + ReDoc)
-- ✅ Production-grade infrastructure (Docker, Gunicorn, Nginx, PostgreSQL)
+- ✅ Production-grade infrastructure (Docker, Gunicorn, Nginx, SQLite)
 - ✅ Security headers, rate limiting, and HTTPS configuration
 - ✅ Error monitoring with Sentry
 - ✅ Health check endpoints for load balancers

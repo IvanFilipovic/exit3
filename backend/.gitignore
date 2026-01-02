@@ -64,8 +64,8 @@ ssl/
 *.cer
 
 # Docker volumes
-postgres_data/
 redis_data/
+db_volume/
 
 # Testing
 .tox/
@@ -135,6 +135,3 @@ tmp/
 *.log
 logs/
 *.log.*
-
-# pgAdmin
-pgadmin_data/
