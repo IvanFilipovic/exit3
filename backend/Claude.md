@@ -123,237 +123,6 @@ export default defineEventHandler(async (event) => {
 
 ---
 
-## 🟡 Production Readiness Issues
-
-### 3. No Deployment Configuration
-**Severity:** 🟡 HIGH
-
-**Missing:**
-- Dockerfile
-- docker-compose.yml
-- WSGI server configuration (Gunicorn/uWSGI)
-- Static file serving setup
-- Nginx reverse proxy config
-
-**Will be created as separate files (see Dockerfile section below)**
-
----
-
-### 4. No Logging Configuration
-**Severity:** 🟡 HIGH
-
-**Issue:** Using Django defaults, no structured logging for production debugging.
-
-**Add comprehensive logging:**
-```python
-# backend/settings.py
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '[{levelname}] {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '[{levelname}] {message}',
-            'style': '{',
-        },
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        'file': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'maxBytes': 1024 * 1024 * 10,  # 10 MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'filters': ['require_debug_false'],
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console', 'file', 'mail_admins'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'common': {  # Your app logger
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-}
-
-# Create logs directory
-import os
-os.makedirs(BASE_DIR / 'logs', exist_ok=True)
-```
-
-**Usage in views:**
-```python
-# common/views.py
-import logging
-
-logger = logging.getLogger(__name__)
-
-class LeadListCreateAPIView(generics.ListCreateAPIView):
-    def create(self, request, *args, **kwargs):
-        logger.info(f"Lead creation attempt from IP: {request.META.get('REMOTE_ADDR')}")
-        try:
-            response = super().create(request, *args, **kwargs)
-            logger.info(f"Lead created: {response.data.get('id')}")
-            return response
-        except Exception as e:
-            logger.error(f"Lead creation failed: {str(e)}", exc_info=True)
-            raise
-```
-
----
-
-### 5. No Error Monitoring
-**Severity:** 🟡 HIGH
-
-**Issue:** No way to track errors in production (Sentry, Rollbar, etc.)
-
-**Setup Sentry:**
-```bash
-pip install sentry-sdk
-```
-
-```python
-# backend/settings.py
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
-
-if not DEBUG:
-    sentry_sdk.init(
-        dsn=config('SENTRY_DSN', default=''),
-        integrations=[DjangoIntegration()],
-        traces_sample_rate=0.1,  # 10% of transactions
-        send_default_pii=False,  # Don't send user data
-        environment=config('DJANGO_ENV', default='production'),
-    )
-```
-
----
-
-### 6. No Health Check Endpoint
-**Severity:** 🟡 HIGH
-
-**Issue:** Load balancers and monitoring tools need health checks.
-
-**Create health check:**
-```python
-# backend/urls.py
-from django.http import JsonResponse
-from django.db import connection
-import sys
-
-def health_check(request):
-    """Health check endpoint for load balancers"""
-    # Check database connectivity
-    try:
-        connection.ensure_connection()
-        db_status = 'healthy'
-    except Exception as e:
-        db_status = f'unhealthy: {str(e)}'
-
-    return JsonResponse({
-        'status': 'ok' if db_status == 'healthy' else 'degraded',
-        'database': db_status,
-        'python_version': sys.version,
-        'django_version': django.VERSION,
-    })
-
-urlpatterns = [
-    path('backend/health/', health_check, name='health-check'),
-    # ... other paths
-]
-```
-
-**Kubernetes/Docker health checks:**
-```yaml
-# docker-compose.yml
-healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:8000/backend/health/"]
-  interval: 30s
-  timeout: 10s
-  retries: 3
-```
-
----
-
-### 14. Static File Serving Not Production-Ready
-**File:** `backend/settings.py:164-165`
-**Severity:** 🟡 HIGH
-
-```python
-STATIC_URL = '/static/'
-STATIC_ROOT = '/var/www/exit3/static'
-```
-
-**Issues:**
-1. No static file collection configured
-2. Should use WhiteNoise or CDN
-3. Missing media file configuration for uploaded contract files
-
-**Fix with WhiteNoise:**
-```bash
-pip install whitenoise
-```
-
-```python
-# settings.py
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add after SecurityMiddleware
-    # ... rest of middleware
-]
-
-# Static files
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Media files (for uploaded contracts)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-```
-
-**Collect static files:**
-```bash
-python manage.py collectstatic --noinput
-```
-
----
-
 ## 🟢 Code Quality Issues
 
 ### 15. No Automated Testing
@@ -772,7 +541,7 @@ limit_req_zone $binary_remote_addr zone=admin_limit:10m rate=2r/s;
 
 server {
     listen 80;
-    server_name exit3.online www.exit3.online;
+    server_name exit3.agency www.exit3.agency;
 
     # Redirect to HTTPS
     return 301 https://$server_name$request_uri;
@@ -780,11 +549,11 @@ server {
 
 server {
     listen 443 ssl http2;
-    server_name exit3.online www.exit3.online;
+    server_name exit3.agency www.exit3.agency;
 
     # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/exit3.online/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/exit3.online/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/exit3.agency/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/exit3.agency/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
@@ -832,7 +601,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
 
         # CORS headers (if not handled by Django)
-        add_header Access-Control-Allow-Origin "https://www.exit3.online" always;
+        add_header Access-Control-Allow-Origin "https://www.exit3.agency" always;
         add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
         add_header Access-Control-Allow-Headers "Authorization, Content-Type" always;
 
@@ -847,42 +616,6 @@ server {
         access_log off;
     }
 }
-```
-
----
-
-### 24. No Database Backup Strategy
-**Severity:** 🟡 HIGH
-
-**Create backup script:**
-```bash
-#!/bin/bash
-# scripts/backup_db.sh
-
-BACKUP_DIR="/var/backups/exit3"
-DATE=$(date +%Y%m%d_%H%M%S)
-DB_NAME="${DB_NAME:-exit3_db}"
-DB_USER="${DB_USER:-postgres}"
-
-# Create backup directory
-mkdir -p $BACKUP_DIR
-
-# Backup database
-pg_dump -U $DB_USER -h localhost $DB_NAME | gzip > $BACKUP_DIR/backup_$DATE.sql.gz
-
-# Keep only last 30 days of backups
-find $BACKUP_DIR -name "backup_*.sql.gz" -mtime +30 -delete
-
-# Upload to S3 (optional)
-# aws s3 cp $BACKUP_DIR/backup_$DATE.sql.gz s3://exit3-backups/
-
-echo "Backup completed: backup_$DATE.sql.gz"
-```
-
-**Cron job:**
-```bash
-# Run daily at 2 AM
-0 2 * * * /opt/exit3/scripts/backup_db.sh >> /var/log/exit3_backup.log 2>&1
 ```
 
 ---
@@ -1013,8 +746,6 @@ Access at: `http://localhost:8000/backend/api/docs/`
 ### Phase 5: Database & Performance (RECOMMENDED)
 - [ ] Add database indexes on frequently queried fields
 - [ ] Set up database connection pooling
-- [ ] Create database backup script
-- [ ] Set up automated daily backups
 - [ ] Add query optimization (select_related, prefetch_related)
 - [ ] Configure database connection retry logic
 

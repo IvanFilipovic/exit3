@@ -198,7 +198,7 @@ nitro: {
 **Required `.env.example`:**
 ```bash
 # Application
-NUXT_PUBLIC_BASE_URL=https://www.exit3.online
+NUXT_PUBLIC_BASE_URL=https://www.exit3.agency
 
 # Google Tag Manager
 NUXT_PUBLIC_GTAG_ID=GTM-XXXXXXX
@@ -209,7 +209,7 @@ BASIC_API_KEY=your_backend_api_key_here
 # Email Configuration (if using send-email endpoint)
 MAIL_SMTP_HOST=smtp.example.com
 MAIL_SMTP_PORT=465
-MAIL_USER=noreply@exit3.online
+MAIL_USER=noreply@exit3.agency
 MAIL_PASS=your_smtp_password_here
 
 # Environment
@@ -742,8 +742,8 @@ useHead({
         '@context': 'https://schema.org',
         '@type': 'Organization',
         name: 'Exit Three',
-        url: 'https://www.exit3.online',
-        logo: 'https://www.exit3.online/image/logos/logo.svg',
+        url: 'https://www.exit3.agency',
+        logo: 'https://www.exit3.agency/image/logos/logo.svg',
         description: 'Automation and custom software solutions',
         sameAs: [
           'https://www.linkedin.com/company/exit-three',
