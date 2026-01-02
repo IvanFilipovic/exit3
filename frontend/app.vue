@@ -1,5 +1,8 @@
 <template>
   <div class="bg-project_white">
+      <!-- Structured Data for SEO -->
+      <StructuredData />
+
       <div class="mx-0 md:mx-auto backdrop-blur-sm md:bg-project_white/20 md:backdrop-blur-lg z-50 fixed top-0 w-full">
           <AppHeader />
       </div>
